@@ -1,16 +1,88 @@
 version: '3.9'
+
 services:
   db-pg:
     container_name: db-pg
     image: postgres:13
+    env_file:
+      - .env
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_NAME}
     ports:
-      - 5432:5432
+      - '5432:5432'
     volumes:
       - pg_data:/var/lib/postgresql/data
+    networks:
+      - node-net
+
+  nestjs_build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nestjs-app
+    container_name: nestjs_build_temp
+    restart: 'no'
+    command: echo "Build done"
+    networks:
+      - node-net
+
+  app1:
+    image: nestjs-app
+    container_name: nestjs_app_1
+    env_file:
+      - .env
+    depends_on:
+      - db-pg
+      - nestjs_build
+    expose:
+      - 3000
+    networks:
+      - node-net
+
+  app2:
+    image: nestjs-app
+    container_name: nestjs_app_2
+    env_file:
+      - .env
+    depends_on:
+      - db-pg
+      - nestjs_build
+    expose:
+      - 3000
+    networks:
+      - node-net
+
+  app3:
+    image: nestjs-app
+    container_name: nestjs_app_3
+    env_file:
+      - .env
+    depends_on:
+      - db-pg
+      - nestjs_build
+    expose:
+      - 3000
+    networks:
+      - node-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_lb
+    ports:
+      - 8000:8000
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app1
+      - app2
+      - app3
+    networks:
+      - node-net
 
 volumes:
   pg_data:
+
+networks:
+  node-net:
