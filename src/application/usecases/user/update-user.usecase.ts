@@ -32,8 +32,8 @@ export class UpdateUserUseCase {
 
       return user;
     } catch (error) {
-      this.logger.error(error.response.message);
-      if (error.response.statusCode === 404) {
+      this.logger.error(error?.response?.message);
+      if (error?.response?.statusCode === 404) {
         throw this.notFoundException;
       }
 

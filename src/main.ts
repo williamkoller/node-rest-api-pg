@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import cluster from 'cluster';
+import { cpus } from 'os';
 
 async function bootstrap() {
   const logger = new Logger('Main');
@@ -24,4 +26,20 @@ async function bootstrap() {
     logger.log(`Server running at port: ${port}`),
   );
 }
-bootstrap();
+if (cluster.isPrimary) {
+  const numCPUs = cpus().length;
+  const logger = new Logger('Cluster');
+
+  logger.log(`🧠 Primary PID ${process.pid} starting ${numCPUs} workers...`);
+
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('exit', (worker, code, signal) => {
+    logger.warn(`❌ Worker ${worker.process.pid} died. Restarting...`);
+    cluster.fork();
+  });
+} else {
+  bootstrap();
+}

@@ -15,13 +15,17 @@ import { UserModule } from './presentation/modules/user/user.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
+        host: 'db-pg',
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASS'),
         port: 5432,
         database: config.get<string>('DB_NAME'),
         synchronize: true,
         entities: [UserModel],
-        host: 'db-pg',
+        extra: {
+          max: 3,
+          connectionTimeoutMillis: 3000,
+        },
       }),
     }),
     UserModule,

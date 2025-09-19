@@ -13,7 +13,20 @@ export class UserRepository {
   ) {}
 
   async create(data: AddUserDTO): Promise<UserModel> {
-    return await this.userRepo.save(data);
+    const query = `
+      INSERT INTO users (name, email, age)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (email) DO NOTHING
+      RETURNING *;
+    `;
+
+    const result = await this.userRepo.query(query, [
+      data.name,
+      data.email,
+      data.age,
+    ]);
+
+    return result[0] ?? null;
   }
 
   async findAll(): Promise<UserModel[]> {

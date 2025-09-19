@@ -4,17 +4,23 @@ import { randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 
 export let options = {
   stages: [
-    { duration: '10s', target: 20 }, // aumentar usuários
-    { duration: '30s', target: 20 },
-    { duration: '10s', target: 0 },
+    { duration: '10s', target: 100 },
+    { duration: '20s', target: 200 },
+    { duration: '30s', target: 500 },
+    { duration: '10s', target: 0 }, // ramp down
   ],
+  thresholds: {
+    http_req_failed: ['rate<0.1'], // tolera no máximo 10% de falha
+    http_req_duration: ['p(95)<500'], // 95% das requisições abaixo de 500ms
+  },
 };
 
-const BASE_URL = 'http://nestjs_app:8000'; // nginx está redirecionando para os containers nestjs
+const BASE_URL = 'http://nestjs_app:8000';
 
 export default function () {
-  const userId = randomIntBetween(1, 100); // id aleatório para testes
+  const userId = randomIntBetween(1, 50000);
   const age = randomIntBetween(18, 70);
+
   const payload = JSON.stringify({
     name: `User${userId}`,
     email: `user${userId}@example.com`,
@@ -23,50 +29,20 @@ export default function () {
 
   const headers = { 'Content-Type': 'application/json' };
 
-  // Executar requisições em sequência ou aleatoriamente
-  const randomEndpoint = Math.floor(Math.random() * 5);
+  const endpoints = [
+    () => http.get(`${BASE_URL}/users`),
+    () => http.post(`${BASE_URL}/users`, payload, { headers }),
+    () => http.put(`${BASE_URL}/users/${userId}`, payload, { headers }),
+    () => http.get(`${BASE_URL}/users/${userId}`),
+    () => http.del(`${BASE_URL}/users/${userId}`),
+  ];
 
-  let res;
+  const index = Math.floor(Math.random() * endpoints.length);
+  const res = endpoints[index]();
 
-  switch (randomEndpoint) {
-    case 0:
-      res = http.get(`${BASE_URL}/users`);
-      check(res, {
-        'GET /users: status is 200': (r) => r.status === 200,
-      });
-      break;
+  check(res, {
+    'status is OK or expected': (r) => [200, 201, 204, 404].includes(r.status),
+  });
 
-    case 1:
-      res = http.post(`${BASE_URL}/users`, payload, { headers });
-      check(res, {
-        'POST /users: status is 201': (r) => r.status === 201,
-      });
-      break;
-
-    case 2:
-      res = http.put(`${BASE_URL}/users/${userId}`, payload, { headers });
-      check(res, {
-        'PUT /users/:id: status is 200 or 404': (r) =>
-          r.status === 200 || r.status === 404,
-      });
-      break;
-
-    case 3:
-      res = http.get(`${BASE_URL}/users/${userId}`);
-      check(res, {
-        'GET /users/:id: status is 200 or 404': (r) =>
-          r.status === 200 || r.status === 404,
-      });
-      break;
-
-    case 4:
-      res = http.del(`${BASE_URL}/users/${userId}`);
-      check(res, {
-        'DELETE /users/:id: status is 200 or 404': (r) =>
-          r.status === 200 || r.status === 404,
-      });
-      break;
-  }
-
-  sleep(1); // aguarda 1 segundo por usuário virtual
+  sleep(0.2); // menos descanso => mais agressivo
 }

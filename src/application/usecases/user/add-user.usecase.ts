@@ -7,6 +7,7 @@ import {
 import { UserRepository } from '../../../infra/db/repositories/user/user-repository';
 import { AddUserDTO } from '../../../presentation/dtos/user/add-user.dto';
 import { UserModel } from '../../../infra/db/models/user/user.model';
+import { QueryFailedError } from 'typeorm';
 
 @Injectable()
 export class AddUserUseCase {
@@ -19,14 +20,18 @@ export class AddUserUseCase {
   async execute(data: AddUserDTO): Promise<UserModel> {
     try {
       const userExists = await this.userRepository.findByEmail(data.email);
-      if (userExists) {
+      if (userExists && userExists.id) {
         throw this.ConflictException;
       }
 
       return await this.userRepository.create(data);
     } catch (error) {
-      this.logger.error(error.response.message);
-      if (error.response.statusCode === 409) {
+      this.logger.error(error?.response?.message);
+      if (
+        (error instanceof QueryFailedError &&
+          (error as any).code === '23505') ||
+        error?.response?.statusCode === 409
+      ) {
         throw this.ConflictException;
       }
 

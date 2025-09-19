@@ -4,6 +4,7 @@ services:
   db-pg:
     container_name: db-pg
     image: postgres:13
+    command: postgres -c max_connections=300
     env_file:
       - .env
     environment:
@@ -66,6 +67,18 @@ services:
       - 3000
     networks:
       - node-net
+  app4:
+    image: nestjs-app
+    container_name: nestjs_app_4
+    env_file:
+      - .env
+    depends_on:
+      - db-pg
+      - nestjs_build
+    expose:
+      - 3000
+    networks:
+      - node-net
 
   nginx:
     image: nginx:alpine
@@ -78,6 +91,7 @@ services:
       - app1
       - app2
       - app3
+      - app4
     networks:
       - node-net
 
