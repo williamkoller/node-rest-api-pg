@@ -1,0 +1,97 @@
+{
+  "title": "NestJS Prometheus Dashboard",
+  "panels": [
+    {
+      "title": "HTTP Requests Total",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 5 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "decimals": 0
+        }
+      }
+    },
+    {
+      "title": "Request Duration P95",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 5 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[1m]))",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 2
+        }
+      }
+    },
+    {
+      "title": "Heap Used (MB)",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 5 },
+      "targets": [
+        {
+          "expr": "nodejs_heap_used_bytes / 1024 / 1024",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "decimals": 1
+        }
+      }
+    },
+    {
+      "title": "Event Loop Lag (s)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 5, "w": 8, "h": 5 },
+      "targets": [
+        {
+          "expr": "nodejs_eventloop_lag_seconds",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3
+        }
+      }
+    },
+    {
+      "title": "Memory RSS (MB)",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 5, "w": 8, "h": 5 },
+      "targets": [
+        {
+          "expr": "nodejs_memory_rss_bytes / 1024 / 1024",
+          "refId": "E"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "decimals": 1
+        }
+      }
+    }
+  ],
+  "schemaVersion": 37,
+  "version": 1,
+  "refresh": "10s",
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  }
+}

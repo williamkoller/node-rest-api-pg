@@ -1,9 +1,9 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import helmet from 'helmet';
+import { NestFactory } from '@nestjs/core';
 import cluster from 'cluster';
+import helmet from 'helmet';
 import { cpus } from 'os';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const logger = new Logger('Main');
@@ -20,6 +20,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
   app.enableShutdownHooks();
   const port = process.env.PORT ?? 3000;
   await app.listen(port, '0.0.0.0', () =>

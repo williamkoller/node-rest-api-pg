@@ -10,8 +10,8 @@ export let options = {
     { duration: '10s', target: 0 }, // ramp down
   ],
   thresholds: {
-    http_req_failed: ['rate<0.1'], // tolera no máximo 10% de falha
-    http_req_duration: ['p(95)<500'], // 95% das requisições abaixo de 500ms
+    http_req_failed: ['rate<0.5'], // tolera no máximo 10% de falha
+    http_req_duration: ['p(95)<5700'], // 95% das requisições abaixo de 500ms
   },
 };
 

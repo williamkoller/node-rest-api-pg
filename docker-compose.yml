@@ -95,8 +95,46 @@ services:
     networks:
       - node-net
 
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - '9090:9090'
+    networks:
+      - node-net
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - '3001:3000'
+    volumes:
+      - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./monitoring/dashboards:/var/lib/grafana/dashboards
+      - grafana_data:/var/lib/grafana
+    networks:
+      - node-net
+
+  node-exporter:
+    image: prom/node-exporter
+    ports:
+      - '9100:9100'
+    networks:
+      - node-net
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    ports:
+      - '9187:9187'
+    environment:
+      DATA_SOURCE_NAME: 'postgresql://${DB_USER}:${DB_PASS}@db-pg:5432/${DB_NAME}?sslmode=disable'
+    networks:
+      - node-net
+
 volumes:
   pg_data:
+  grafana_data:
 
 networks:
   node-net:
